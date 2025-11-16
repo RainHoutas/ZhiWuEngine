@@ -43,7 +43,7 @@ model StudentExperimentLog {
   endTime          DateTime?
   completionStatus String    @default("进行中")
   recordedData     Json?
-  actionsLog       String?
+  actionsLog       Json?
 
   student    User       @relation(fields: [studentId], references: [id])
   experiment Experiment @relation(fields: [experimentId], references: [id])

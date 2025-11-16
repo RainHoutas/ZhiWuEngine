@@ -3581,7 +3581,6 @@ export namespace Prisma {
     startTime: Date | null
     endTime: Date | null
     completionStatus: string | null
-    actionsLog: string | null
   }
 
   export type StudentExperimentLogMaxAggregateOutputType = {
@@ -3591,7 +3590,6 @@ export namespace Prisma {
     startTime: Date | null
     endTime: Date | null
     completionStatus: string | null
-    actionsLog: string | null
   }
 
   export type StudentExperimentLogCountAggregateOutputType = {
@@ -3626,7 +3624,6 @@ export namespace Prisma {
     startTime?: true
     endTime?: true
     completionStatus?: true
-    actionsLog?: true
   }
 
   export type StudentExperimentLogMaxAggregateInputType = {
@@ -3636,7 +3633,6 @@ export namespace Prisma {
     startTime?: true
     endTime?: true
     completionStatus?: true
-    actionsLog?: true
   }
 
   export type StudentExperimentLogCountAggregateInputType = {
@@ -3745,7 +3741,7 @@ export namespace Prisma {
     endTime: Date | null
     completionStatus: string
     recordedData: JsonValue | null
-    actionsLog: string | null
+    actionsLog: JsonValue | null
     _count: StudentExperimentLogCountAggregateOutputType | null
     _avg: StudentExperimentLogAvgAggregateOutputType | null
     _sum: StudentExperimentLogSumAggregateOutputType | null
@@ -3813,7 +3809,7 @@ export namespace Prisma {
       endTime: Date | null
       completionStatus: string
       recordedData: Prisma.JsonValue | null
-      actionsLog: string | null
+      actionsLog: Prisma.JsonValue | null
     }, ExtArgs["result"]["studentExperimentLog"]>
     composites: {}
   }
@@ -4192,7 +4188,7 @@ export namespace Prisma {
     readonly endTime: FieldRef<"StudentExperimentLog", 'DateTime'>
     readonly completionStatus: FieldRef<"StudentExperimentLog", 'String'>
     readonly recordedData: FieldRef<"StudentExperimentLog", 'Json'>
-    readonly actionsLog: FieldRef<"StudentExperimentLog", 'String'>
+    readonly actionsLog: FieldRef<"StudentExperimentLog", 'Json'>
   }
     
 
@@ -7668,8 +7664,7 @@ export namespace Prisma {
 
 
   export const StudentExperimentLogOrderByRelevanceFieldEnum: {
-    completionStatus: 'completionStatus',
-    actionsLog: 'actionsLog'
+    completionStatus: 'completionStatus'
   };
 
   export type StudentExperimentLogOrderByRelevanceFieldEnum = (typeof StudentExperimentLogOrderByRelevanceFieldEnum)[keyof typeof StudentExperimentLogOrderByRelevanceFieldEnum]
@@ -7910,7 +7905,7 @@ export namespace Prisma {
     endTime?: DateTimeNullableFilter<"StudentExperimentLog"> | Date | string | null
     completionStatus?: StringFilter<"StudentExperimentLog"> | string
     recordedData?: JsonNullableFilter<"StudentExperimentLog">
-    actionsLog?: StringNullableFilter<"StudentExperimentLog"> | string | null
+    actionsLog?: JsonNullableFilter<"StudentExperimentLog">
     student?: XOR<UserScalarRelationFilter, UserWhereInput>
     experiment?: XOR<ExperimentScalarRelationFilter, ExperimentWhereInput>
   }
@@ -7940,7 +7935,7 @@ export namespace Prisma {
     endTime?: DateTimeNullableFilter<"StudentExperimentLog"> | Date | string | null
     completionStatus?: StringFilter<"StudentExperimentLog"> | string
     recordedData?: JsonNullableFilter<"StudentExperimentLog">
-    actionsLog?: StringNullableFilter<"StudentExperimentLog"> | string | null
+    actionsLog?: JsonNullableFilter<"StudentExperimentLog">
     student?: XOR<UserScalarRelationFilter, UserWhereInput>
     experiment?: XOR<ExperimentScalarRelationFilter, ExperimentWhereInput>
   }, "id">
@@ -7972,7 +7967,7 @@ export namespace Prisma {
     endTime?: DateTimeNullableWithAggregatesFilter<"StudentExperimentLog"> | Date | string | null
     completionStatus?: StringWithAggregatesFilter<"StudentExperimentLog"> | string
     recordedData?: JsonNullableWithAggregatesFilter<"StudentExperimentLog">
-    actionsLog?: StringNullableWithAggregatesFilter<"StudentExperimentLog"> | string | null
+    actionsLog?: JsonNullableWithAggregatesFilter<"StudentExperimentLog">
   }
 
   export type AIInteractionLogWhereInput = {
@@ -8323,7 +8318,7 @@ export namespace Prisma {
     endTime?: Date | string | null
     completionStatus?: string
     recordedData?: NullableJsonNullValueInput | InputJsonValue
-    actionsLog?: string | null
+    actionsLog?: NullableJsonNullValueInput | InputJsonValue
     student: UserCreateNestedOneWithoutExperimentsInput
     experiment: ExperimentCreateNestedOneWithoutLogsInput
   }
@@ -8336,7 +8331,7 @@ export namespace Prisma {
     endTime?: Date | string | null
     completionStatus?: string
     recordedData?: NullableJsonNullValueInput | InputJsonValue
-    actionsLog?: string | null
+    actionsLog?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type StudentExperimentLogUpdateInput = {
@@ -8344,7 +8339,7 @@ export namespace Prisma {
     endTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completionStatus?: StringFieldUpdateOperationsInput | string
     recordedData?: NullableJsonNullValueInput | InputJsonValue
-    actionsLog?: NullableStringFieldUpdateOperationsInput | string | null
+    actionsLog?: NullableJsonNullValueInput | InputJsonValue
     student?: UserUpdateOneRequiredWithoutExperimentsNestedInput
     experiment?: ExperimentUpdateOneRequiredWithoutLogsNestedInput
   }
@@ -8357,7 +8352,7 @@ export namespace Prisma {
     endTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completionStatus?: StringFieldUpdateOperationsInput | string
     recordedData?: NullableJsonNullValueInput | InputJsonValue
-    actionsLog?: NullableStringFieldUpdateOperationsInput | string | null
+    actionsLog?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type StudentExperimentLogCreateManyInput = {
@@ -8368,7 +8363,7 @@ export namespace Prisma {
     endTime?: Date | string | null
     completionStatus?: string
     recordedData?: NullableJsonNullValueInput | InputJsonValue
-    actionsLog?: string | null
+    actionsLog?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type StudentExperimentLogUpdateManyMutationInput = {
@@ -8376,7 +8371,7 @@ export namespace Prisma {
     endTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completionStatus?: StringFieldUpdateOperationsInput | string
     recordedData?: NullableJsonNullValueInput | InputJsonValue
-    actionsLog?: NullableStringFieldUpdateOperationsInput | string | null
+    actionsLog?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type StudentExperimentLogUncheckedUpdateManyInput = {
@@ -8387,7 +8382,7 @@ export namespace Prisma {
     endTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completionStatus?: StringFieldUpdateOperationsInput | string
     recordedData?: NullableJsonNullValueInput | InputJsonValue
-    actionsLog?: NullableStringFieldUpdateOperationsInput | string | null
+    actionsLog?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type AIInteractionLogCreateInput = {
@@ -8918,7 +8913,6 @@ export namespace Prisma {
     startTime?: SortOrder
     endTime?: SortOrder
     completionStatus?: SortOrder
-    actionsLog?: SortOrder
   }
 
   export type StudentExperimentLogMinOrderByAggregateInput = {
@@ -8928,7 +8922,6 @@ export namespace Prisma {
     startTime?: SortOrder
     endTime?: SortOrder
     completionStatus?: SortOrder
-    actionsLog?: SortOrder
   }
 
   export type StudentExperimentLogSumOrderByAggregateInput = {
@@ -9755,7 +9748,7 @@ export namespace Prisma {
     endTime?: Date | string | null
     completionStatus?: string
     recordedData?: NullableJsonNullValueInput | InputJsonValue
-    actionsLog?: string | null
+    actionsLog?: NullableJsonNullValueInput | InputJsonValue
     experiment: ExperimentCreateNestedOneWithoutLogsInput
   }
 
@@ -9766,7 +9759,7 @@ export namespace Prisma {
     endTime?: Date | string | null
     completionStatus?: string
     recordedData?: NullableJsonNullValueInput | InputJsonValue
-    actionsLog?: string | null
+    actionsLog?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type StudentExperimentLogCreateOrConnectWithoutStudentInput = {
@@ -9881,7 +9874,7 @@ export namespace Prisma {
     endTime?: DateTimeNullableFilter<"StudentExperimentLog"> | Date | string | null
     completionStatus?: StringFilter<"StudentExperimentLog"> | string
     recordedData?: JsonNullableFilter<"StudentExperimentLog">
-    actionsLog?: StringNullableFilter<"StudentExperimentLog"> | string | null
+    actionsLog?: JsonNullableFilter<"StudentExperimentLog">
   }
 
   export type AIInteractionLogUpsertWithWhereUniqueWithoutStudentInput = {
@@ -9972,7 +9965,7 @@ export namespace Prisma {
     endTime?: Date | string | null
     completionStatus?: string
     recordedData?: NullableJsonNullValueInput | InputJsonValue
-    actionsLog?: string | null
+    actionsLog?: NullableJsonNullValueInput | InputJsonValue
     student: UserCreateNestedOneWithoutExperimentsInput
   }
 
@@ -9983,7 +9976,7 @@ export namespace Prisma {
     endTime?: Date | string | null
     completionStatus?: string
     recordedData?: NullableJsonNullValueInput | InputJsonValue
-    actionsLog?: string | null
+    actionsLog?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type StudentExperimentLogCreateOrConnectWithoutExperimentInput = {
@@ -10511,7 +10504,7 @@ export namespace Prisma {
     endTime?: Date | string | null
     completionStatus?: string
     recordedData?: NullableJsonNullValueInput | InputJsonValue
-    actionsLog?: string | null
+    actionsLog?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type AIInteractionLogCreateManyStudentInput = {
@@ -10542,7 +10535,7 @@ export namespace Prisma {
     endTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completionStatus?: StringFieldUpdateOperationsInput | string
     recordedData?: NullableJsonNullValueInput | InputJsonValue
-    actionsLog?: NullableStringFieldUpdateOperationsInput | string | null
+    actionsLog?: NullableJsonNullValueInput | InputJsonValue
     experiment?: ExperimentUpdateOneRequiredWithoutLogsNestedInput
   }
 
@@ -10553,7 +10546,7 @@ export namespace Prisma {
     endTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completionStatus?: StringFieldUpdateOperationsInput | string
     recordedData?: NullableJsonNullValueInput | InputJsonValue
-    actionsLog?: NullableStringFieldUpdateOperationsInput | string | null
+    actionsLog?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type StudentExperimentLogUncheckedUpdateManyWithoutStudentInput = {
@@ -10563,7 +10556,7 @@ export namespace Prisma {
     endTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completionStatus?: StringFieldUpdateOperationsInput | string
     recordedData?: NullableJsonNullValueInput | InputJsonValue
-    actionsLog?: NullableStringFieldUpdateOperationsInput | string | null
+    actionsLog?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type AIInteractionLogUpdateWithoutStudentInput = {
@@ -10641,7 +10634,7 @@ export namespace Prisma {
     endTime?: Date | string | null
     completionStatus?: string
     recordedData?: NullableJsonNullValueInput | InputJsonValue
-    actionsLog?: string | null
+    actionsLog?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type AIInteractionLogCreateManyExperimentInput = {
@@ -10659,7 +10652,7 @@ export namespace Prisma {
     endTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completionStatus?: StringFieldUpdateOperationsInput | string
     recordedData?: NullableJsonNullValueInput | InputJsonValue
-    actionsLog?: NullableStringFieldUpdateOperationsInput | string | null
+    actionsLog?: NullableJsonNullValueInput | InputJsonValue
     student?: UserUpdateOneRequiredWithoutExperimentsNestedInput
   }
 
@@ -10670,7 +10663,7 @@ export namespace Prisma {
     endTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completionStatus?: StringFieldUpdateOperationsInput | string
     recordedData?: NullableJsonNullValueInput | InputJsonValue
-    actionsLog?: NullableStringFieldUpdateOperationsInput | string | null
+    actionsLog?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type StudentExperimentLogUncheckedUpdateManyWithoutExperimentInput = {
@@ -10680,7 +10673,7 @@ export namespace Prisma {
     endTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completionStatus?: StringFieldUpdateOperationsInput | string
     recordedData?: NullableJsonNullValueInput | InputJsonValue
-    actionsLog?: NullableStringFieldUpdateOperationsInput | string | null
+    actionsLog?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type AIInteractionLogUpdateWithoutExperimentInput = {

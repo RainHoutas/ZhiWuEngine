@@ -217,8 +217,7 @@ exports.Prisma.QueryMode = {
 };
 
 exports.Prisma.StudentExperimentLogOrderByRelevanceFieldEnum = {
-  completionStatus: 'completionStatus',
-  actionsLog: 'actionsLog'
+  completionStatus: 'completionStatus'
 };
 
 exports.Prisma.AIInteractionLogOrderByRelevanceFieldEnum = {
