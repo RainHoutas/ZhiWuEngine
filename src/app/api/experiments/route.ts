@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
     try {
-        // 如果你未来要做分页，可在这里读取 ?page=1&size=10
         const experiments = await prisma.experiment.findMany({
             orderBy: { id: "asc" },
             select: {
@@ -17,7 +16,8 @@ export async function GET(req: NextRequest) {
             },
         });
 
-        return NextResponse.json({ experiments }, { status: 200 });
+        // 🔥 返回数组，不要包在对象里
+        return NextResponse.json(experiments, { status: 200 });
     } catch (error) {
         console.error("获取实验列表失败：", error);
         return NextResponse.json(
@@ -26,3 +26,4 @@ export async function GET(req: NextRequest) {
         );
     }
 }
+
