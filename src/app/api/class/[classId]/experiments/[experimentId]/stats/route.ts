@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/jwt";
 
 interface DecodedToken {
@@ -7,11 +7,18 @@ interface DecodedToken {
     role: "student" | "teacher" | "admin";
 }
 
+interface ActionLogEntry {
+    time: string;
+    action: string;
+}
+
 export async function GET(
-    req: Request,
-    { params }: { params: { classId: string; experimentId: string } }
+    req: NextRequest,
+    context: { params: Promise<{ classId: string; experimentId: string }> } // 解构 params
 ) {
     try {
+        const { classId, experimentId } = await context.params;
+
         const auth = req.headers.get("authorization");
         if (!auth) {
             return NextResponse.json({ error: "Missing token" }, { status: 401 });
@@ -24,31 +31,27 @@ export async function GET(
             return NextResponse.json({ error: "Invalid token" }, { status: 401 });
         }
 
-        const classId = Number(params.classId);
-        const experimentId = Number(params.experimentId);
+        const classIdNum = Number(classId);
+        const experimentIdNum = Number(experimentId);
 
-        if (Number.isNaN(classId) || Number.isNaN(experimentId)) {
+        if (Number.isNaN(classIdNum) || Number.isNaN(experimentIdNum)) {
             return NextResponse.json(
                 { error: "Invalid classId or experimentId" },
                 { status: 400 }
             );
         }
 
-        // 查班级信息
+        // 查班级
         const classInfo = await prisma.class.findUnique({
-            where: { id: classId },
-            select: {
-                id: true,
-                name: true,
-                teacherId: true,
-            },
+            where: { id: classIdNum },
+            select: { id: true, name: true, teacherId: true },
         });
 
         if (!classInfo) {
             return NextResponse.json({ error: "Class not found" }, { status: 404 });
         }
 
-        // 权限：必须是该班教师或管理员
+        // 权限检查
         if (
             decoded.role !== "admin" &&
             !(decoded.role === "teacher" && decoded.id === classInfo.teacherId)
@@ -56,9 +59,9 @@ export async function GET(
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
-        // 查班级学生
+        // 查班成员
         const members = await prisma.classMember.findMany({
-            where: { classId },
+            where: { classId: classIdNum },
             select: { userId: true },
         });
 
@@ -83,10 +86,10 @@ export async function GET(
             );
         }
 
-        // 查询该班所有学生在指定实验的记录
+        // 查实验日志
         const logs = await prisma.studentExperimentLog.findMany({
             where: {
-                experimentId,
+                experimentId: experimentIdNum,
                 studentId: { in: studentIds },
             },
             select: {
@@ -103,7 +106,7 @@ export async function GET(
 
         const completedLogs = logs.filter((l) => l.endTime !== null);
 
-        // 计算平均成绩（recordedData.score）
+        // 计算平均成绩
         const scores = completedLogs
             .map((l) => {
                 const data = l.recordedData as unknown as { score?: number };
@@ -114,16 +117,17 @@ export async function GET(
         const avgScore =
             scores.length === 0
                 ? 0
-                : Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) /
-                10;
+                : Math.round(
+                (scores.reduce((a, b) => a + b, 0) / scores.length) * 10
+            ) / 10;
 
-        // 计算平均用时分钟
+        // 计算平均用时
         const times = completedLogs
             .map((l) => {
                 if (!l.startTime || !l.endTime) return null;
                 const diffMs =
                     new Date(l.endTime).getTime() - new Date(l.startTime).getTime();
-                return diffMs / 60000;
+                return diffMs / 60000; // 转换为分钟
             })
             .filter((v): v is number => v !== null);
 
@@ -134,19 +138,21 @@ export async function GET(
                 (times.reduce((a, b) => a + b, 0) / times.length) * 10
             ) / 10;
 
-        // 计算平均错误（actionsLog 中 action === "Error"）
+        // 计算平均错误数
         const errorCounts = logs.map((l) => {
-            if (!Array.isArray(l.actionsLog)) return 0;
-            return (l.actionsLog as unknown as any[]).filter(
-                (a) => a.action === "error"
-            ).length;
+            const actions = l.actionsLog as unknown as ActionLogEntry[] | null;
+
+            if (!actions || !Array.isArray(actions)) return 0;
+
+            return actions.filter((entry) => entry.action === "error").length;
         });
 
         const avgErrors =
             errorCounts.length === 0
                 ? 0
                 : Math.round(
-                (errorCounts.reduce((a, b) => a + b, 0) / errorCounts.length) * 10
+                (errorCounts.reduce((a, b) => a + b, 0) / errorCounts.length) *
+                10
             ) / 10;
 
         return NextResponse.json(
@@ -158,12 +164,12 @@ export async function GET(
                     completionRate:
                         totalStudents === 0
                             ? 0
-                            : Math.round((completedLogs.length / totalStudents) * 100),
-
+                            : Math.round(
+                                (completedLogs.length / totalStudents) * 100
+                            ),
                     avgScore,
                     avgTimeMinutes,
                     avgErrors,
-
                     logs,
                 },
             },

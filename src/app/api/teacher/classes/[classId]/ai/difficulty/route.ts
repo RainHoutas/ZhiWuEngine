@@ -1,7 +1,13 @@
 import { prisma } from "@/lib/prisma";
+import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/jwt";
 import { askAI } from "@/lib/ai";
-import { NextResponse } from "next/server";
+
+// 定义 ActionLogEntry 类型
+interface ActionLogEntry {
+    action: string;
+    time: string;
+}
 
 interface DecodedToken {
     id: number;
@@ -9,10 +15,13 @@ interface DecodedToken {
 }
 
 export async function GET(
-    req: Request,
-    { params }: { params: { experimentId: string } }
+    req: NextRequest,
+    context: { params: Promise<{ classId: string }> }
 ) {
     try {
+        // 获取 classId
+        const { classId } = await context.params;
+
         const auth = req.headers.get("authorization");
         const token = auth?.replace("Bearer ", "") ?? "";
         const decoded = verifyToken(token) as DecodedToken | null;
@@ -28,44 +37,54 @@ export async function GET(
             );
         }
 
-        const experimentId = Number(params.experimentId);
+        const classIdNum = Number(classId);
 
-        // 1. 读实验信息
+        if (Number.isNaN(classIdNum)) {
+            return NextResponse.json(
+                { error: "Invalid classId" },
+                { status: 400 }
+            );
+        }
+
+        // 1. 获取实验信息
         const experiment = await prisma.experiment.findUnique({
-            where: { id: experimentId },
-            select: { id: true, name: true, subject: true }
+            where: { id: classIdNum },
+            select: { id: true, name: true, subject: true },
         });
 
         if (!experiment) {
             return NextResponse.json({ error: "Experiment not found" }, { status: 404 });
         }
 
-        // 2. 所有 AI 互动（AI 啰嗦点）
+        // 2. 获取 AI 互动日志
         const aiLogs = await prisma.aIInteractionLog.findMany({
-            where: { experimentId },
+            where: { experimentId: classIdNum }, // 应该使用 classId 来查询
             select: {
                 userQuery: true,
                 aiResponse: true,
                 createdAt: true,
-                student: { select: { id: true, fullName: true } }
-            }
+                student: { select: { id: true, fullName: true } },
+            },
         });
 
-        // 3. 所有实验行为日志
+        // 3. 获取学生实验行为日志
         const logs = await prisma.studentExperimentLog.findMany({
-            where: { experimentId },
+            where: { experimentId: classIdNum },
             select: {
                 actionsLog: true,
-                student: { select: { id: true, fullName: true } }
-            }
+                student: { select: { id: true, fullName: true } },
+            },
         });
 
-        // 4. 行为错误统计（简单提取行为 action）
+        // 4. 行为错误统计（操作日志 action）
         const actionCount: Record<string, number> = {};
 
         logs.forEach((log) => {
             if (Array.isArray(log.actionsLog)) {
-                (log.actionsLog as any[]).forEach((a) => {
+                // 将 actionsLog 转换为 ActionLogEntry[] 类型，确保类型安全
+                const actions = log.actionsLog as unknown as ActionLogEntry[];
+
+                actions.forEach((a) => {
                     const act = a.action;
                     actionCount[act] = (actionCount[act] ?? 0) + 1;
                 });
@@ -77,7 +96,7 @@ export async function GET(
             .sort((a, b) => b.count - a.count)
             .slice(0, 10);
 
-        // 5. AI 提问主题统计（调用 AI 分类）
+        // 5. AI 提问主题统计（分类 AI 提问）
         const topicCount: Record<string, number> = {};
         const topicCategories = [
             "操作类", "实验步骤类", "实验原理类",
@@ -97,9 +116,7 @@ ${topicCategories.join(" / ")}
       `.trim();
 
             const topic = await askAI(prompt);
-
-            const cleanTopic =
-                topicCategories.includes(topic.trim()) ? topic.trim() : "其他";
+            const cleanTopic = topicCategories.includes(topic.trim()) ? topic.trim() : "其他";
 
             topicCount[cleanTopic] = (topicCount[cleanTopic] ?? 0) + 1;
         }
@@ -108,13 +125,14 @@ ${topicCategories.join(" / ")}
             .map(([topic, count]) => ({ topic, count }))
             .sort((a, b) => b.count - a.count);
 
-        // 6. 分析行为导致提问（行为触发 AI 交互的“因果”）
+        // 6. 行为导致提问分析（行为触发 AI）
         const behaviorTriggerMap: Record<string, number> = {};
 
         aiLogs.forEach((ai) => {
             logs.forEach((expLog) => {
                 if (Array.isArray(expLog.actionsLog)) {
-                    (expLog.actionsLog as any[]).forEach((action) => {
+                    const actions = expLog.actionsLog as unknown as ActionLogEntry[];
+                    actions.forEach((action) => {
                         if (ai.userQuery.includes(action.action)) {
                             behaviorTriggerMap[action.action] =
                                 (behaviorTriggerMap[action.action] ?? 0) + 1;
@@ -129,12 +147,12 @@ ${topicCategories.join(" / ")}
                 action,
                 relatedQueries: count,
                 sampleQuestion:
-                    aiLogs.find((q) => q.userQuery.includes(action))?.userQuery ?? ""
+                    aiLogs.find((q) => q.userQuery.includes(action))?.userQuery ?? "",
             }))
             .sort((a, b) => b.relatedQueries - a.relatedQueries)
             .slice(0, 10);
 
-        // 7. 让 AI 自动总结“教学建议与难点分析”
+        // 7. 自动生成教学总结和难点分析
         const summaryPrompt = `
 你是一名中学实验教学专家，下面是某个实验的行为日志分析与AI提问主题，请为教师生成一份“实验难点分析与教学建议”。
 

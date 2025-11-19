@@ -9,9 +9,10 @@ interface DecodedToken {
 
 export async function GET(
     req: Request,
-    { params }: { params: { classId: string; studentId: string } }
+    context: { params: Promise<{ classId: string; studentId: string }> }
 ) {
     try {
+        // 获取 Token
         const auth = req.headers.get("authorization");
         if (!auth) {
             return NextResponse.json({ error: "Missing token" }, { status: 401 });
@@ -24,8 +25,8 @@ export async function GET(
             return NextResponse.json({ error: "Invalid token" }, { status: 401 });
         }
 
-        const classId = Number(params.classId);
-        const studentId = Number(params.studentId);
+        const classId = Number((await context.params.then((p) => p.classId)));
+        const studentId = Number((await context.params.then((p) => p.studentId)));
 
         if (Number.isNaN(classId) || Number.isNaN(studentId)) {
             return NextResponse.json(
@@ -34,7 +35,7 @@ export async function GET(
             );
         }
 
-        // 查班级并验证权限
+        // 查找班级信息并验证权限
         const classInfo = await prisma.class.findUnique({
             where: { id: classId },
             select: {
@@ -48,6 +49,7 @@ export async function GET(
             return NextResponse.json({ error: "Class not found" }, { status: 404 });
         }
 
+        // 权限检查
         if (
             decoded.role !== "admin" &&
             !(decoded.role === "teacher" && decoded.id === classInfo.teacherId)
@@ -55,7 +57,7 @@ export async function GET(
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
-        // 查该学生是否属于该班级
+        // 查找该学生是否是班级成员
         const isMember = await prisma.classMember.findFirst({
             where: {
                 classId,
@@ -70,7 +72,7 @@ export async function GET(
             );
         }
 
-        // 查该学生所有实验日志
+        // 查找该学生的所有实验日志
         const logs = await prisma.studentExperimentLog.findMany({
             where: { studentId },
             orderBy: { startTime: "desc" },

@@ -9,7 +9,7 @@ interface DecodedToken {
 
 export async function GET(
     req: Request,
-    { params }: { params: { experimentId: string } }
+    context: { params: Promise<{ experimentId: string }> }
 ) {
     try {
         const auth = req.headers.get("authorization");
@@ -32,7 +32,7 @@ export async function GET(
             );
         }
 
-        const experimentId = Number(params.experimentId);
+        const experimentId = Number( await context.params.then((p) => p.experimentId) );
         if (Number.isNaN(experimentId)) {
             return NextResponse.json(
                 { error: "Invalid experimentId" },

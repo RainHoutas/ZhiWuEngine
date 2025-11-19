@@ -30,23 +30,29 @@ export async function POST(req: Request) {
         }
 
         const token = jwt.sign(
-            {
-                id: user.id,
-                role: user.role,
-            },
+            { id: user.id, role: user.role },
             JWT_SECRET,
             { expiresIn: "7d" }
         );
 
-        return NextResponse.json({
+        const response = NextResponse.json({
             message: "登录成功",
-            token,
             user: {
                 id: user.id,
                 email: user.email,
                 fullName: user.fullName,
+                role: user.role,
             },
         });
+
+        response.cookies.set("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            path: "/",
+            maxAge: 60 * 60 * 24 * 7, // 7天
+        });
+
+        return response;
     } catch (e) {
         console.error(e);
         return NextResponse.json(

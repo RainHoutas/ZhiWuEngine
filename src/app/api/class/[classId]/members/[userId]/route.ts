@@ -10,7 +10,7 @@ interface TokenPayload {
 
 export async function DELETE(
     req: NextRequest,
-    { params }: { params: { classId: string; userId: string } }
+    context: { params: Promise<{ classId: string; userId: string }> }
 ) {
     try {
         const authHeader = req.headers.get("authorization");
@@ -24,8 +24,8 @@ export async function DELETE(
             return NextResponse.json({ message: "Token 无效或已过期" }, { status: 401 });
         }
 
-        const classId = Number(params.classId);
-        const userId = Number(params.userId);
+        const classId = Number((await context.params.then((p) => p.classId)));
+        const userId = Number((await context.params.then((p) => p.userId)));
         if (Number.isNaN(classId) || Number.isNaN(userId)) {
             return NextResponse.json({ message: "参数无效" }, { status: 400 });
         }

@@ -9,7 +9,7 @@ interface DecodedToken {
 
 export async function GET(
     req: Request,
-    { params }: { params: { logId: string } }
+    context: { params: Promise<{ logId: string }> }
 ) {
     try {
         const auth = req.headers.get("authorization");
@@ -24,7 +24,7 @@ export async function GET(
             return NextResponse.json({ error: "Invalid token" }, { status: 401 });
         }
 
-        const logId = Number(params.logId);
+        const logId = Number((await context.params.then((p) => p.logId)));
 
         const log = await prisma.studentExperimentLog.findUnique({
             where: { id: logId },

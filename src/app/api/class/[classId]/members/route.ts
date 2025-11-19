@@ -4,12 +4,12 @@ import { authGuard } from "@/lib/authGuard";
 
 export async function GET(
     req: Request,
-    { params }: { params: { classId: string } }
+    context: { params: Promise<{ classId: string }> }
 ) {
     const decoded = await authGuard(req);
     if (decoded instanceof NextResponse) return decoded;
 
-    const classId = parseInt(params.classId);
+    const classId = parseInt( await context.params.then((p) => p.classId) );
     if (isNaN(classId)) {
         return NextResponse.json(
             { message: "classId 无效" },

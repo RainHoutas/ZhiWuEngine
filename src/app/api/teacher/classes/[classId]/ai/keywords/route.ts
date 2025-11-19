@@ -15,7 +15,7 @@ const stopWords = [
 
 export async function GET(
     req: Request,
-    { params }: { params: { classId: string } }
+    context: { params: Promise<{ classId: string }> }
 ) {
     try {
         const auth = req.headers.get("authorization");
@@ -37,7 +37,7 @@ export async function GET(
             );
         }
 
-        const classId = Number(params.classId);
+        const classId = Number(await context.params.then((p) => p.classId));
 
         // 1. 查班级学生
         const members = await prisma.classMember.findMany({

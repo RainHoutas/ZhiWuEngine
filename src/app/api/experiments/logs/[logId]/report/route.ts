@@ -10,7 +10,7 @@ interface DecodedToken {
 
 export async function POST(
     req: Request,
-    { params }: { params: { logId: string } }
+    context: { params: Promise<{ logId: string }> }
 ) {
     try {
         const auth = req.headers.get("authorization");
@@ -25,7 +25,7 @@ export async function POST(
             return NextResponse.json({ error: "Invalid token" }, { status: 401 });
         }
 
-        const logId = Number(params.logId);
+        const logId = Number((await context.params.then((p) => p.logId)));
         if (Number.isNaN(logId)) {
             return NextResponse.json({ error: "Invalid logId" }, { status: 400 });
         }
