@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import jwt from "jsonwebtoken";
@@ -8,27 +10,22 @@ const JWT_SECRET = process.env.JWT_SECRET!;
 interface DecodedToken {
     id: number;
     role: "teacher" | "admin" | "student";
-    email: string; // 如果有 email 字段可以加上
+    email: string;
 }
 
-/**
- * 匹配需要拦截的路由
- */
 export const config = {
     matcher: [
-        "/",                 // 根路径
+        "/login",
+        "/dashboard/:path*",
     ],
 };
 
-/**
- * 中间件逻辑
- */
 export function middleware(req: NextRequest) {
     const token = req.cookies.get("token")?.value;
-    const pathname = req.nextUrl.pathname;
+    const { pathname } = req.nextUrl;
 
     // ================================
-    // 1. 未登录用户访问受保护页面 → 跳转 login
+    // 1. 没有 token：只禁止访问 dashboard
     // ================================
     if (!token) {
         console.log("❌ No token");
@@ -38,11 +35,7 @@ export function middleware(req: NextRequest) {
             return NextResponse.redirect(new URL("/login", req.url));
         }
 
-        // 未登录访问 "/" → 跳 login
-        if (pathname === "/") {
-            return NextResponse.redirect(new URL("/login", req.url));
-        }
-
+        // 访问 /login 或其他公开页面（比如 /api 公共接口）→ 放行
         return NextResponse.next();
     }
 
@@ -54,7 +47,12 @@ export function middleware(req: NextRequest) {
     try {
         decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
     } catch (e) {
-        console.log("⚠ Invalid token, deleting and redirecting to login");
+        console.log("========================================");
+        console.log("❌ Token 验证失败！");
+        console.log("🔹 原始 Token：", token);
+        console.log("🔹 JWT_SECRET：", JWT_SECRET);
+        console.log("🔹 解析错误：", e);
+        console.log("========================================");
 
         const res = NextResponse.redirect(new URL("/login", req.url));
         res.cookies.delete("token");
@@ -64,27 +62,17 @@ export function middleware(req: NextRequest) {
     const role = decoded.role; // student | teacher | admin
 
     // ================================
-    // 3. 已登录用户访问 login → 自动跳转
+    // 3. 已登录用户访问 /login → 自动跳到自己的 dashboard
     // ================================
     if (pathname === "/login") {
-        console.log("🔁 Logged user visiting login → redirect to dashboard");
+        console.log("🔁 Logged user visiting /login → redirect to dashboard");
         return NextResponse.redirect(
             new URL(`/dashboard/${role}`, req.url)
         );
     }
 
     // ================================
-    // 4. 已登录访问 "/" → 自动进入专属主页
-    // ================================
-    if (pathname === "/") {
-        console.log("🏠 Logged user → redirect to role dashboard");
-        return NextResponse.redirect(
-            new URL(`/dashboard/${role}`, req.url)
-        );
-    }
-
-    // ================================
-    // 5. 正常继续请求
+    // 4. 其他情况（已登录访问 /dashboard/...）→ 放行
     // ================================
     return NextResponse.next();
 }

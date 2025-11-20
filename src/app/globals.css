@@ -1,10 +1,61 @@
 @import "tailwindcss";
 
-:root {
-    --background: transparent;   /* ← 这里改成透明 */
-    --foreground: #ededed;
+/* 整个页面底色统一为深色 */
+html, body {
+    background-color: #020617 !important; /* slate-950 */
 }
 
-body {
-    background: none;
+html {
+    overflow-y: scroll;
+}
+
+/* 隐藏滚动条但保留宽度 */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: transparent;
+}
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+}
+
+/* 滚动时显示霓虹光条 */
+html.show-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(
+            180deg,
+            rgba(34, 211, 238, 0.85),
+            rgba(99, 102, 241, 0.85)
+    );
+    border-radius: 10px;
+    box-shadow: 0 0 12px rgba(34, 211, 238, 0.5);
+}
+html.show-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(34, 211, 238, 0.7) transparent;
+}
+
+@keyframes pulse-slow {
+    0% {
+        opacity: 0.4;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.1);
+    }
+    100% {
+        opacity: 0.4;
+        transform: scale(1);
+    }
+}
+
+.animate-pulse-slow {
+    animation: pulse-slow 8s ease-in-out infinite;
 }
