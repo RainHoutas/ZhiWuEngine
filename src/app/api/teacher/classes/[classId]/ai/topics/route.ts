@@ -21,6 +21,13 @@ const TOPIC_CATEGORIES = [
     "其他"
 ];
 
+interface Detail {
+    topic: string;
+    question: string;
+    student: string;
+    experiment: string;
+}
+
 export async function GET(
     req: Request,
     context: { params: Promise<{ classId: string }> }
@@ -71,7 +78,7 @@ export async function GET(
         });
 
         const topicCount: Record<string, number> = {};
-        const details: any[] = [];
+        const details: Detail[] = []; // 使用 Detail 类型替代 any[]
 
         // 3. 使用 AI 为每条问题分类（重点）
         for (const log of logs) {
