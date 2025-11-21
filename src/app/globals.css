@@ -59,3 +59,45 @@ html.show-scrollbar {
 .animate-pulse-slow {
     animation: pulse-slow 8s ease-in-out infinite;
 }
+
+/* 粒子容器 */
+.particles-container {
+    position: absolute;
+    inset: 0;
+    z-index: -10; /* 确保粒子容器在背景层之下 */
+    pointer-events: none;
+}
+
+/* 粒子样式 */
+.particle {
+    position: absolute;
+    border-radius: 50%;
+    width: 15px; /* 粒子大小，稍微增大 */
+    height: 15px;
+    background: rgba(34, 211, 238, 0.8); /* 渐变的蓝色，可以调整为其它颜色 */
+    box-shadow: 0 0 5px rgba(34, 211, 238, 0.5), 0 0 10px rgba(34, 211, 238, 0.3); /* 添加光晕效果 */
+    animation: particle-movement 5s ease-in-out infinite, fade-out 3s ease-out forwards; /* 更平滑的动画 */
+}
+
+/* 粒子的运动动画 */
+@keyframes particle-movement {
+    0% {
+        transform: translate(0, 0) scale(1); /* 初始位置 */
+        opacity: 1;
+    }
+    50% {
+        transform: translate(50px, -50px) scale(1.5); /* 中间位置，粒子放大 */
+        opacity: 0.7; /* 渐变透明度 */
+    }
+    100% {
+        transform: translate(-50px, 50px) scale(1); /* 最终位置 */
+        opacity: 0.3; /* 渐变透明度 */
+    }
+}
+
+/* 粒子消失的动画 */
+@keyframes fade-out {
+    100% {
+        opacity: 0;
+    }
+}
