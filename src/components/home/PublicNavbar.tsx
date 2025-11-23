@@ -52,7 +52,7 @@ export default function PublicNavbar() {
                             href="/login"
                             className="px-4 py-2 text-sm font-medium text-white hover:text-cyan-400 transition-colors"
                         >
-                            登录
+                            登录/进入
                         </Link>
                         <Link
                             href="/register"
