@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 
 export default function PublicNavbar() {
@@ -23,17 +24,28 @@ export default function PublicNavbar() {
         >
             <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
                 {/* Logo 区域 */}
-                <Link href="/" className="flex items-center gap-2 group">
-                    <div className="relative w-8 h-8 flex items-center justify-center">
-                        {/* Logo 呼吸光晕 */}
-                        <div className="absolute inset-0 bg-cyan-500 rounded-lg blur-md opacity-50 group-hover:opacity-100 transition-opacity animate-pulse-slow"></div>
-                        <div className="relative w-full h-full bg-gradient-to-br from-cyan-400 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
-                            Z
+                <Link href="/public" className="flex items-center gap-2 group">
+                    {/* 图标容器：改大了！w-12 h-12 (48px) */}
+                    <div className="relative w-12 h-12 flex items-center justify-center">
+
+                        {/* 呼吸光晕：也跟随变大 */}
+                        <div className="absolute inset-0 bg-cyan-500 blur-lg opacity-40 group-hover:opacity-80 transition-opacity animate-pulse-slow rounded-full"></div>
+
+                        {/* 图片 Logo */}
+                        <div className="relative w-full h-full z-10">
+                            <Image
+                                src="/logo.svg"
+                                alt="知悟引擎 Logo"
+                                fill
+                                className="object-contain"
+                            />
                         </div>
                     </div>
-                    <span className="text-xl font-bold text-white tracking-wide group-hover:text-cyan-400 transition-colors">
+
+                    {/* 文字部分：字号也可以稍微加大一点 text-xl -> text-2xl */}
+                    <span className="text-2xl font-bold text-white tracking-wide group-hover:text-cyan-400 transition-colors">
             知悟引擎
-          </span>
+        </span>
                 </Link>
 
                 {/* 桌面端菜单 */}
