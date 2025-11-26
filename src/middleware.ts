@@ -1,78 +1,85 @@
-export const runtime = "nodejs";
-
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import jwt from "jsonwebtoken";
+import { jwtVerify } from "jose"; // ✅ 使用 jose 替代 jsonwebtoken
 
-const JWT_SECRET = process.env.JWT_SECRET!;
+// 1. 转换 Secret 为 Uint8Array (jose 要求)
+const JWT_SECRET = new TextEncoder().encode(
+    process.env.JWT_SECRET || "default_secret_key_please_change"
+);
 
-// 定义 decoded 的类型，描述从 JWT 中解码的内容
-interface DecodedToken {
-    id: number;
-    role: "teacher" | "admin" | "student";
-    email: string;
-}
-
-export const config = {
-    matcher: [
-        "/login",
-        "/dashboard/:path*",
-    ],
-};
-
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
     const token = req.cookies.get("token")?.value;
     const { pathname } = req.nextUrl;
 
     // ================================
-    // 1. 没有 token：只禁止访问 dashboard
+    // 1. 没有 Token 的情况
     // ================================
     if (!token) {
-        console.log("❌ No token");
-
-        // 未登录访问 dashboard → 跳 login
+        // 如果访问的是受保护的 dashboard 区域，踢回登录页
         if (pathname.startsWith("/dashboard")) {
             return NextResponse.redirect(new URL("/login", req.url));
         }
-
-        // 访问 /login 或其他公开页面（比如 /api 公共接口）→ 放行
+        // 其他公开页面 (如 /login, /register, /api/public) 放行
         return NextResponse.next();
     }
 
     // ================================
-    // 2. 解析 Token
+    // 2. 验证 Token (使用 jose)
     // ================================
-    let decoded: DecodedToken | null = null;
+    let userRole = "";
 
     try {
-        decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
+        const { payload } = await jwtVerify(token, JWT_SECRET);
+        userRole = payload.role as string; // 'student' | 'teacher' | 'admin'
     } catch (e) {
-        console.log("========================================");
-        console.log("❌ Token 验证失败！");
-        console.log("🔹 原始 Token：", token);
-        console.log("🔹 JWT_SECRET：", JWT_SECRET);
-        console.log("🔹 解析错误：", e);
-        console.log("========================================");
-
+        // Token 过期或无效，强制登出
+        console.error("❌ Middleware Token Verify Failed:", e);
         const res = NextResponse.redirect(new URL("/login", req.url));
         res.cookies.delete("token");
         return res;
     }
 
-    const role = decoded.role; // student | teacher | admin
-
     // ================================
-    // 3. 已登录用户访问 /login → 自动跳到自己的 dashboard
+    // 3. 已登录用户访问 /login 或 /register -> 自动跳 Dashboard
     // ================================
-    if (pathname === "/login") {
-        console.log("🔁 Logged user visiting /login → redirect to dashboard");
-        return NextResponse.redirect(
-            new URL(`/dashboard/${role}`, req.url)
-        );
+    if (pathname === "/login" || pathname === "/register") {
+        return NextResponse.redirect(new URL(`/dashboard/${userRole}`, req.url));
     }
 
     // ================================
-    // 4. 其他情况（已登录访问 /dashboard/...）→ 放行
+    // 4. 核心：角色越权保护 (Role Guard)
     // ================================
+
+    // 🛑 场景 A: 学生想进老师或管理员页面
+    if (userRole === "student") {
+        if (pathname.startsWith("/dashboard/teacher") || pathname.startsWith("/dashboard/admin")) {
+            // 踢回学生主页
+            return NextResponse.redirect(new URL("/dashboard/student", req.url));
+        }
+    }
+
+    // 🛑 场景 B: 老师想进管理员页面
+    if (userRole === "teacher") {
+        if (pathname.startsWith("/dashboard/admin")) {
+            // 踢回教师主页
+            return NextResponse.redirect(new URL("/dashboard/teacher", req.url));
+        }
+    }
+
+    // 验证通过，放行
     return NextResponse.next();
 }
+
+// 配置匹配路径：排除静态资源 (_next/static, images, favicon)
+export const config = {
+    matcher: [
+        /*
+         * 匹配所有路径，除了:
+         * 1. /api/auth (登录注册接口不拦截)
+         * 2. /_next (系统文件)
+         * 3. /static (静态文件)
+         * 4. .*\\..* (有后缀的文件，如 .png, .ico)
+         */
+        "/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    ],
+};

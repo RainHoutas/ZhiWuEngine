@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
         }
 
         // 创建实验开始记录
-        const log = await prisma.studentExperimentLog.create({
+        const log = await prisma.experimentLog.create({
             data: {
                 studentId: decoded.id,
                 experimentId: experimentId,

@@ -102,6 +102,21 @@ exports.Prisma.UserScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.ClassScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  inviteCode: 'inviteCode',
+  teacherId: 'teacherId',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ClassMemberScalarFieldEnum = {
+  id: 'id',
+  classId: 'classId',
+  userId: 'userId',
+  joinedAt: 'joinedAt'
+};
+
 exports.Prisma.ExperimentScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -112,13 +127,15 @@ exports.Prisma.ExperimentScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
-exports.Prisma.StudentExperimentLogScalarFieldEnum = {
+exports.Prisma.ExperimentLogScalarFieldEnum = {
   id: 'id',
   studentId: 'studentId',
   experimentId: 'experimentId',
+  score: 'score',
+  timeSpent: 'timeSpent',
+  completionStatus: 'completionStatus',
   startTime: 'startTime',
   endTime: 'endTime',
-  completionStatus: 'completionStatus',
   recordedData: 'recordedData',
   actionsLog: 'actionsLog'
 };
@@ -131,21 +148,6 @@ exports.Prisma.AIInteractionLogScalarFieldEnum = {
   userQuery: 'userQuery',
   aiResponse: 'aiResponse',
   contextSnapshot: 'contextSnapshot',
-  createdAt: 'createdAt'
-};
-
-exports.Prisma.ClassScalarFieldEnum = {
-  id: 'id',
-  name: 'name',
-  teacherId: 'teacherId',
-  joinCode: 'joinCode',
-  createdAt: 'createdAt'
-};
-
-exports.Prisma.ClassMemberScalarFieldEnum = {
-  id: 'id',
-  classId: 'classId',
-  userId: 'userId',
   createdAt: 'createdAt'
 };
 
@@ -163,6 +165,11 @@ exports.Prisma.UserOrderByRelevanceFieldEnum = {
   email: 'email',
   fullName: 'fullName',
   password: 'password'
+};
+
+exports.Prisma.ClassOrderByRelevanceFieldEnum = {
+  name: 'name',
+  inviteCode: 'inviteCode'
 };
 
 exports.Prisma.NullsOrder = {
@@ -188,7 +195,7 @@ exports.Prisma.QueryMode = {
   insensitive: 'insensitive'
 };
 
-exports.Prisma.StudentExperimentLogOrderByRelevanceFieldEnum = {
+exports.Prisma.ExperimentLogOrderByRelevanceFieldEnum = {
   completionStatus: 'completionStatus'
 };
 
@@ -196,11 +203,6 @@ exports.Prisma.AIInteractionLogOrderByRelevanceFieldEnum = {
   sessionId: 'sessionId',
   userQuery: 'userQuery',
   aiResponse: 'aiResponse'
-};
-
-exports.Prisma.ClassOrderByRelevanceFieldEnum = {
-  name: 'name',
-  joinCode: 'joinCode'
 };
 exports.Role = exports.$Enums.Role = {
   student: 'student',
@@ -216,11 +218,11 @@ exports.Subject = exports.$Enums.Subject = {
 
 exports.Prisma.ModelName = {
   User: 'User',
-  Experiment: 'Experiment',
-  StudentExperimentLog: 'StudentExperimentLog',
-  AIInteractionLog: 'AIInteractionLog',
   Class: 'Class',
-  ClassMember: 'ClassMember'
+  ClassMember: 'ClassMember',
+  Experiment: 'Experiment',
+  ExperimentLog: 'ExperimentLog',
+  AIInteractionLog: 'AIInteractionLog'
 };
 /**
  * Create the Client
@@ -261,6 +263,7 @@ const config = {
     "db"
   ],
   "activeProvider": "mysql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
@@ -269,13 +272,13 @@ const config = {
       }
     }
   },
-  "inlineSchema": "datasource db {\n  provider = \"mysql\"\n  url      = env(\"DATABASE_URL\")\n}\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/lib/generated/prisma\"\n}\n\nmodel User {\n  id        Int      @id @default(autoincrement())\n  email     String   @unique // 新增邮箱\n  fullName  String // 完整姓名\n  password  String // 密码（加密保存）\n  role      Role     @default(student) // 用户角色\n  createdAt DateTime @default(now()) // 注册时间\n\n  experiments     StudentExperimentLog[]\n  aiLogs          AIInteractionLog[]\n  classes         ClassMember[]\n  teachingClasses Class[]                @relation(\"TeacherClasses\") // ✅ 新增\n}\n\nmodel Experiment {\n  id             Int      @id @default(autoincrement())\n  name           String\n  subject        Subject  @default(physics)\n  description    String?\n  sceneAssetPath String\n  version        String?\n  createdAt      DateTime @default(now())\n\n  logs   StudentExperimentLog[]\n  aiLogs AIInteractionLog[]\n}\n\nmodel StudentExperimentLog {\n  id               Int       @id @default(autoincrement())\n  studentId        Int\n  experimentId     Int\n  startTime        DateTime  @default(now())\n  endTime          DateTime?\n  completionStatus String    @default(\"进行中\")\n  recordedData     Json?\n  actionsLog       Json?\n\n  student    User       @relation(fields: [studentId], references: [id])\n  experiment Experiment @relation(fields: [experimentId], references: [id])\n}\n\nmodel AIInteractionLog {\n  id              Int      @id @default(autoincrement())\n  studentId       Int\n  experimentId    Int\n  sessionId       String?\n  userQuery       String\n  aiResponse      String\n  contextSnapshot Json?\n  createdAt       DateTime @default(now())\n\n  student    User       @relation(fields: [studentId], references: [id])\n  experiment Experiment @relation(fields: [experimentId], references: [id])\n}\n\nmodel Class {\n  id        Int      @id @default(autoincrement())\n  name      String\n  teacherId Int\n  joinCode  String   @unique // 🔥 新增邀请码\n  createdAt DateTime @default(now())\n\n  teacher User          @relation(\"TeacherClasses\", fields: [teacherId], references: [id]) // ✅ 同名\n  members ClassMember[]\n}\n\nmodel ClassMember {\n  id        Int      @id @default(autoincrement())\n  classId   Int\n  userId    Int\n  createdAt DateTime @default(now())\n\n  user  User  @relation(fields: [userId], references: [id])\n  class Class @relation(fields: [classId], references: [id])\n}\n\nenum Role {\n  student\n  teacher\n  admin\n}\n\nenum Subject {\n  physics\n  chemistry\n  biology\n}\n",
-  "inlineSchemaHash": "1b1e33dca4e9f38fb90c1a923acb23c481e0aa6ca0966ef9e15b6c095d03de9a",
+  "inlineSchema": "datasource db {\n  provider = \"mysql\"\n  url      = env(\"DATABASE_URL\")\n}\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  // 注意：保留你自定义的生成路径\n  output   = \"../src/lib/generated/prisma\"\n}\n\n// --- 1. 用户模型 ---\nmodel User {\n  id        Int      @id @default(autoincrement())\n  email     String   @unique\n  fullName  String\n  password  String\n  role      Role     @default(student) // \"student\" | \"teacher\" | \"admin\"\n  createdAt DateTime @default(now())\n\n  // 关系字段 (修正了命名，以便代码中调用 user.experimentLogs)\n  experimentLogs ExperimentLog[]\n  aiLogs         AIInteractionLog[]\n\n  // 班级相关\n  joinedClasses  ClassMember[]\n  createdClasses Class[]       @relation(\"TeacherClasses\")\n}\n\n// --- 2. 班级模型 ---\nmodel Class {\n  id         Int      @id @default(autoincrement())\n  name       String\n  inviteCode String   @unique // 🔥 修改：统一为 inviteCode，匹配 API 代码\n  teacherId  Int\n  createdAt  DateTime @default(now())\n\n  // 关系\n  teacher User          @relation(\"TeacherClasses\", fields: [teacherId], references: [id])\n  members ClassMember[]\n}\n\n// --- 3. 班级成员表 ---\nmodel ClassMember {\n  id       Int      @id @default(autoincrement())\n  classId  Int\n  userId   Int\n  joinedAt DateTime @default(now()) // 修改：统一命名为 joinedAt\n\n  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)\n  class Class @relation(fields: [classId], references: [id], onDelete: Cascade)\n\n  @@unique([classId, userId]) // 防止重复加入同一个班\n}\n\n// --- 4. 实验元数据 (题库) ---\nmodel Experiment {\n  id             Int      @id @default(autoincrement())\n  name           String\n  subject        Subject  @default(physics)\n  description    String?\n  sceneAssetPath String // Unity 资源路径\n  version        String?\n  createdAt      DateTime @default(now())\n\n  // 关系\n  logs   ExperimentLog[]\n  aiLogs AIInteractionLog[]\n}\n\n// --- 5. 实验记录表 (核心修改) ---\n// 🔥 修改：将 StudentExperimentLog 重命名为 ExperimentLog\nmodel ExperimentLog {\n  id           Int @id @default(autoincrement())\n  studentId    Int\n  experimentId Int\n\n  score            Int? // 新增：分数\n  timeSpent        Int    @default(0) // 新增：耗时(秒)\n  completionStatus String @default(\"进行中\") // \"进行中\", \"已完成\"\n\n  startTime DateTime  @default(now())\n  endTime   DateTime?\n\n  recordedData Json? // 实验过程数据\n  actionsLog   Json? // 操作日志\n\n  // 关系\n  student    User       @relation(fields: [studentId], references: [id])\n  experiment Experiment @relation(fields: [experimentId], references: [id])\n}\n\n// --- 6. AI 对话记录 ---\nmodel AIInteractionLog {\n  id           Int     @id @default(autoincrement())\n  studentId    Int\n  experimentId Int\n  sessionId    String?\n\n  userQuery       String @db.Text // MySQL 中长文本建议用 @db.Text\n  aiResponse      String @db.Text\n  contextSnapshot Json? // 当时的实验环境快照\n\n  createdAt DateTime @default(now())\n\n  student    User       @relation(fields: [studentId], references: [id])\n  experiment Experiment @relation(fields: [experimentId], references: [id])\n}\n\n// --- 枚举 ---\nenum Role {\n  student\n  teacher\n  admin\n}\n\nenum Subject {\n  physics\n  chemistry\n  biology\n}\n",
+  "inlineSchemaHash": "043196765abef3b9a31def6eba119698c399845433e5fe95f55fa3a30a0f2473",
   "copyEngine": true
 }
 config.dirname = '/'
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"fullName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"password\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"role\",\"kind\":\"enum\",\"type\":\"Role\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"experiments\",\"kind\":\"object\",\"type\":\"StudentExperimentLog\",\"relationName\":\"StudentExperimentLogToUser\"},{\"name\":\"aiLogs\",\"kind\":\"object\",\"type\":\"AIInteractionLog\",\"relationName\":\"AIInteractionLogToUser\"},{\"name\":\"classes\",\"kind\":\"object\",\"type\":\"ClassMember\",\"relationName\":\"ClassMemberToUser\"},{\"name\":\"teachingClasses\",\"kind\":\"object\",\"type\":\"Class\",\"relationName\":\"TeacherClasses\"}],\"dbName\":null},\"Experiment\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"subject\",\"kind\":\"enum\",\"type\":\"Subject\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"sceneAssetPath\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"version\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"logs\",\"kind\":\"object\",\"type\":\"StudentExperimentLog\",\"relationName\":\"ExperimentToStudentExperimentLog\"},{\"name\":\"aiLogs\",\"kind\":\"object\",\"type\":\"AIInteractionLog\",\"relationName\":\"AIInteractionLogToExperiment\"}],\"dbName\":null},\"StudentExperimentLog\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"studentId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"experimentId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"startTime\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"endTime\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"completionStatus\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"recordedData\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"actionsLog\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"student\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"StudentExperimentLogToUser\"},{\"name\":\"experiment\",\"kind\":\"object\",\"type\":\"Experiment\",\"relationName\":\"ExperimentToStudentExperimentLog\"}],\"dbName\":null},\"AIInteractionLog\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"studentId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"experimentId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"sessionId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userQuery\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"aiResponse\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"contextSnapshot\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"student\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"AIInteractionLogToUser\"},{\"name\":\"experiment\",\"kind\":\"object\",\"type\":\"Experiment\",\"relationName\":\"AIInteractionLogToExperiment\"}],\"dbName\":null},\"Class\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"teacherId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"joinCode\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"teacher\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"TeacherClasses\"},{\"name\":\"members\",\"kind\":\"object\",\"type\":\"ClassMember\",\"relationName\":\"ClassToClassMember\"}],\"dbName\":null},\"ClassMember\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"classId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"ClassMemberToUser\"},{\"name\":\"class\",\"kind\":\"object\",\"type\":\"Class\",\"relationName\":\"ClassToClassMember\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"fullName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"password\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"role\",\"kind\":\"enum\",\"type\":\"Role\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"experimentLogs\",\"kind\":\"object\",\"type\":\"ExperimentLog\",\"relationName\":\"ExperimentLogToUser\"},{\"name\":\"aiLogs\",\"kind\":\"object\",\"type\":\"AIInteractionLog\",\"relationName\":\"AIInteractionLogToUser\"},{\"name\":\"joinedClasses\",\"kind\":\"object\",\"type\":\"ClassMember\",\"relationName\":\"ClassMemberToUser\"},{\"name\":\"createdClasses\",\"kind\":\"object\",\"type\":\"Class\",\"relationName\":\"TeacherClasses\"}],\"dbName\":null},\"Class\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"inviteCode\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"teacherId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"teacher\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"TeacherClasses\"},{\"name\":\"members\",\"kind\":\"object\",\"type\":\"ClassMember\",\"relationName\":\"ClassToClassMember\"}],\"dbName\":null},\"ClassMember\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"classId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"joinedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"ClassMemberToUser\"},{\"name\":\"class\",\"kind\":\"object\",\"type\":\"Class\",\"relationName\":\"ClassToClassMember\"}],\"dbName\":null},\"Experiment\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"subject\",\"kind\":\"enum\",\"type\":\"Subject\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"sceneAssetPath\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"version\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"logs\",\"kind\":\"object\",\"type\":\"ExperimentLog\",\"relationName\":\"ExperimentToExperimentLog\"},{\"name\":\"aiLogs\",\"kind\":\"object\",\"type\":\"AIInteractionLog\",\"relationName\":\"AIInteractionLogToExperiment\"}],\"dbName\":null},\"ExperimentLog\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"studentId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"experimentId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"score\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"timeSpent\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"completionStatus\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"startTime\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"endTime\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"recordedData\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"actionsLog\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"student\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"ExperimentLogToUser\"},{\"name\":\"experiment\",\"kind\":\"object\",\"type\":\"Experiment\",\"relationName\":\"ExperimentToExperimentLog\"}],\"dbName\":null},\"AIInteractionLog\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"studentId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"experimentId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"sessionId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userQuery\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"aiResponse\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"contextSnapshot\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"student\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"AIInteractionLogToUser\"},{\"name\":\"experiment\",\"kind\":\"object\",\"type\":\"Experiment\",\"relationName\":\"AIInteractionLogToExperiment\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
 defineDmmfProperty(exports.Prisma, config.runtimeDataModel)
 config.engineWasm = {
   getRuntime: async () => require('./query_engine_bg.js'),

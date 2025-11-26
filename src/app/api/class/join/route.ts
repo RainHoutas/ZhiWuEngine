@@ -1,74 +1,54 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { authGuard } from "@/lib/authGuard";
+import { authGuard } from "@/lib/authGuard"; // 复用你刚修好的守卫
 
 export async function POST(req: Request) {
-    const decoded = await authGuard(req);
-    if (decoded instanceof NextResponse) return decoded;
-
-    // 学生和教师都可以加入班级
-    // （一般教师不需要加入，但可以保留此能力）
+    // 1. 鉴权
+    const payload = await authGuard(req);
+    if (payload instanceof NextResponse) return payload;
 
     try {
-        const { joinCode } = await req.json();
+        const { inviteCode } = await req.json();
 
-        if (!joinCode) {
-            return NextResponse.json(
-                { message: "缺少邀请码" },
-                { status: 400 }
-            );
+        if (!inviteCode) {
+            return NextResponse.json({ message: "请输入邀请码" }, { status: 400 });
         }
 
-        // 查找班级
-        const cls = await prisma.class.findUnique({
-            where: { joinCode },
+        // 2. 查找班级
+        const targetClass = await prisma.class.findUnique({
+            where: { inviteCode },
         });
 
-        if (!cls) {
-            return NextResponse.json(
-                { message: "邀请码无效或班级不存在" },
-                { status: 404 }
-            );
+        if (!targetClass) {
+            return NextResponse.json({ message: "无效的邀请码" }, { status: 404 });
         }
 
-        // 检查是否已经加入
-        const exists = await prisma.classMember.findFirst({
+        // 3. 检查是否已加入
+        const existingMember = await prisma.classMember.findUnique({
             where: {
-                classId: cls.id,
-                userId: decoded.id,
+                classId_userId: {
+                    classId: targetClass.id,
+                    userId: payload.id,
+                },
             },
         });
 
-        if (exists) {
-            return NextResponse.json(
-                { message: "你已经加入了这个班级" },
-                { status: 400 }
-            );
+        if (existingMember) {
+            return NextResponse.json({ message: "你已经是该班级成员了" }, { status: 409 });
         }
 
-        // 加入班级
-        const member = await prisma.classMember.create({
+        // 4. 加入班级
+        await prisma.classMember.create({
             data: {
-                classId: cls.id,
-                userId: decoded.id,
+                classId: targetClass.id,
+                userId: payload.id,
             },
         });
 
-        return NextResponse.json({
-            message: "加入班级成功",
-            class: {
-                id: cls.id,
-                name: cls.name,
-                joinCode: cls.joinCode,
-                teacherId: cls.teacherId,
-            },
-            memberId: member.id,
-        });
+        return NextResponse.json({ message: "加入成功", classId: targetClass.id });
+
     } catch (e) {
         console.error(e);
-        return NextResponse.json(
-            { message: "服务器错误" },
-            { status: 500 }
-        );
+        return NextResponse.json({ message: "加入失败" }, { status: 500 });
     }
 }

@@ -130,6 +130,21 @@ exports.Prisma.UserScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.ClassScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  inviteCode: 'inviteCode',
+  teacherId: 'teacherId',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ClassMemberScalarFieldEnum = {
+  id: 'id',
+  classId: 'classId',
+  userId: 'userId',
+  joinedAt: 'joinedAt'
+};
+
 exports.Prisma.ExperimentScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -140,13 +155,15 @@ exports.Prisma.ExperimentScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
-exports.Prisma.StudentExperimentLogScalarFieldEnum = {
+exports.Prisma.ExperimentLogScalarFieldEnum = {
   id: 'id',
   studentId: 'studentId',
   experimentId: 'experimentId',
+  score: 'score',
+  timeSpent: 'timeSpent',
+  completionStatus: 'completionStatus',
   startTime: 'startTime',
   endTime: 'endTime',
-  completionStatus: 'completionStatus',
   recordedData: 'recordedData',
   actionsLog: 'actionsLog'
 };
@@ -159,21 +176,6 @@ exports.Prisma.AIInteractionLogScalarFieldEnum = {
   userQuery: 'userQuery',
   aiResponse: 'aiResponse',
   contextSnapshot: 'contextSnapshot',
-  createdAt: 'createdAt'
-};
-
-exports.Prisma.ClassScalarFieldEnum = {
-  id: 'id',
-  name: 'name',
-  teacherId: 'teacherId',
-  joinCode: 'joinCode',
-  createdAt: 'createdAt'
-};
-
-exports.Prisma.ClassMemberScalarFieldEnum = {
-  id: 'id',
-  classId: 'classId',
-  userId: 'userId',
   createdAt: 'createdAt'
 };
 
@@ -191,6 +193,11 @@ exports.Prisma.UserOrderByRelevanceFieldEnum = {
   email: 'email',
   fullName: 'fullName',
   password: 'password'
+};
+
+exports.Prisma.ClassOrderByRelevanceFieldEnum = {
+  name: 'name',
+  inviteCode: 'inviteCode'
 };
 
 exports.Prisma.NullsOrder = {
@@ -216,7 +223,7 @@ exports.Prisma.QueryMode = {
   insensitive: 'insensitive'
 };
 
-exports.Prisma.StudentExperimentLogOrderByRelevanceFieldEnum = {
+exports.Prisma.ExperimentLogOrderByRelevanceFieldEnum = {
   completionStatus: 'completionStatus'
 };
 
@@ -224,11 +231,6 @@ exports.Prisma.AIInteractionLogOrderByRelevanceFieldEnum = {
   sessionId: 'sessionId',
   userQuery: 'userQuery',
   aiResponse: 'aiResponse'
-};
-
-exports.Prisma.ClassOrderByRelevanceFieldEnum = {
-  name: 'name',
-  joinCode: 'joinCode'
 };
 exports.Role = exports.$Enums.Role = {
   student: 'student',
@@ -244,11 +246,11 @@ exports.Subject = exports.$Enums.Subject = {
 
 exports.Prisma.ModelName = {
   User: 'User',
-  Experiment: 'Experiment',
-  StudentExperimentLog: 'StudentExperimentLog',
-  AIInteractionLog: 'AIInteractionLog',
   Class: 'Class',
-  ClassMember: 'ClassMember'
+  ClassMember: 'ClassMember',
+  Experiment: 'Experiment',
+  ExperimentLog: 'ExperimentLog',
+  AIInteractionLog: 'AIInteractionLog'
 };
 
 /**

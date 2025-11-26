@@ -3,18 +3,36 @@ import { prisma } from "@/lib/prisma";
 import { authGuard } from "@/lib/authGuard";
 
 export async function GET(req: Request) {
-    const decoded = await authGuard(req);
-    if (decoded instanceof NextResponse) return decoded;
+    // 1. 调用守卫
+    const responseOrPayload = await authGuard(req);
 
-    const user = await prisma.user.findUnique({
-        where: { id: decoded.id },
-    });
+    // 2. 检查返回值是否是 NextResponse (即 Error 401)
+    if (responseOrPayload instanceof NextResponse) {
+        return responseOrPayload;
+    }
 
-    return NextResponse.json({
-        id: user?.id,
-        email: user?.email,
-        fullName: user?.fullName,
-        role: user?.role,
-        createdAt: user?.createdAt,
-    });
+    // 3. 此时 payload 肯定是解码后的数据
+    const payload = responseOrPayload;
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: Number(payload.id) }, // 确保 ID 转为数字
+            select: {
+                id: true,
+                email: true,
+                fullName: true,
+                role: true,
+                createdAt: true,
+            }
+        });
+
+        if (!user) {
+            return NextResponse.json({ message: "用户不存在" }, { status: 404 });
+        }
+
+        return NextResponse.json(user);
+    } catch (error) {
+        console.error("Database Error:", error);
+        return NextResponse.json({ message: "服务器错误" }, { status: 500 });
+    }
 }

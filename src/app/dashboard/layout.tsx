@@ -1,21 +1,41 @@
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-    return (
-        <div className="flex min-h-screen bg-gray-100 text-slate-900">
-            {/* 这是你之后的侧边栏 */}
-            <aside className="w-64 bg-slate-900 text-slate-100 p-4">
-                {/* 功能菜单 */}
-                <div className="font-bold text-lg mb-6">知悟引擎后台</div>
-                <nav className="space-y-3">
-                    <a className="block hover:text-cyan-300" href="/dashboard/admin">管理首页</a>
-                    <a className="block hover:text-cyan-300" href="/dashboard/admin/experiments">实验管理</a>
-                    <a className="block hover:text-cyan-300" href="/dashboard/admin/classes">班级管理</a>
-                    <a className="block hover:text-cyan-300" href="/dashboard/admin/stats">学情分析</a>
-                </nav>
-            </aside>
+'use client';
 
-            <main className="flex-1 p-6">
-                {children}
+import Sidebar from '@/components/dashboard/Sidebar';
+import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
+
+export default function DashboardLayout({
+                                            children,
+                                        }: {
+    children: React.ReactNode;
+}) {
+    const { theme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    return (
+        <div className="h-screen w-full flex bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 selection:bg-cyan-500/30 font-sans transition-colors duration-300">
+
+            <Sidebar />
+
+            {/* 逻辑判断：
+         如果没加载完 OR 主题是 dark -> 用 skin-neon (青色)
+         否则 -> 用 skin-gray (灰色)
+      */}
+            <main
+                className={`flex-1 pl-64 h-full overflow-y-auto custom-scroll relative z-10 ${
+                    !mounted || theme === 'dark' ? 'skin-neon' : 'skin-gray'
+                }`}
+            >
+                <div className="max-w-7xl mx-auto p-8">
+                    {children}
+                </div>
             </main>
+
+            <div className="fixed inset-0 z-0 pointer-events-none opacity-20 hidden dark:block bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay" />
         </div>
     );
 }
