@@ -15,7 +15,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="zh-CN" suppressHydrationWarning>
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen w-screen overflow-hidden bg-slate-950`}>
+        {/* 恢复默认 body，允许原生滚动 */}
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
             {children}
         </ThemeProvider>

@@ -88,27 +88,6 @@ export default function StudentDashboard() {
                     variant="green"
                     delay={0.3}
                 />
-                <StatCard
-                    title="平均实验得分"
-                    value="88.5"
-                    icon={Trophy}
-                    variant="green"
-                    delay={0.3}
-                />
-                <StatCard
-                    title="平均实验得分"
-                    value="88.5"
-                    icon={Trophy}
-                    variant="green"
-                    delay={0.3}
-                />
-                <StatCard
-                    title="平均实验得分"
-                    value="88.5"
-                    icon={Trophy}
-                    variant="green"
-                    delay={0.3}
-                />
             </div>
 
             {/* 最近任务 */}
