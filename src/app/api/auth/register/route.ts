@@ -24,8 +24,8 @@ export async function POST(req: Request) {
 
         // 3. 安全过滤：禁止注册管理员
         // 假设前端传过来的是 'student' 或 'teacher'
+        // 注意：这里强制转为小写以匹配 Prisma Enum (根据你之前的schema定义)
         const safeRole = role === 'teacher' ? 'teacher' : 'student';
-        // 注意：这里强制转为大写以匹配 Prisma Enum，且只允许这两种角色
 
         // 4. 检查邮箱是否存在
         const existing = await prisma.user.findUnique({
@@ -48,11 +48,12 @@ export async function POST(req: Request) {
                 email,
                 password: hashedPassword,
                 fullName,
-                role: safeRole, // 使用安全的、格式化后的角色
+                role: safeRole,
             },
         });
 
-        return NextResponse.json({
+        // 7. 构建响应对象
+        const response = NextResponse.json({
             message: "注册成功",
             user: {
                 id: user.id,
@@ -61,6 +62,13 @@ export async function POST(req: Request) {
                 role: user.role
             },
         });
+
+        // 🛑 核心修改：强制删除 Token Cookie
+        // 这样前端跳转到登录页时，状态就是干净的“未登录”状态
+        response.cookies.delete("token");
+
+        return response;
+
     } catch (e) {
         console.error("Registration Error:", e);
         return NextResponse.json(

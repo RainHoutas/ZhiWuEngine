@@ -6,11 +6,21 @@ import { useState, useEffect } from "react";
 
 export default function PublicNavbar() {
     const [scrolled, setScrolled] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(false); // 新增：登录状态
 
-    // 监听滚动，实现滚动后背景加深的效果
     useEffect(() => {
+        // 1. 滚动监听
         const handleScroll = () => setScrolled(window.scrollY > 20);
         window.addEventListener("scroll", handleScroll);
+
+        // 2. 登录状态检查 (新增)
+        // 检查 cookie 中是否存在 token
+        const checkLogin = () => {
+            const hasToken = document.cookie.split(';').some((item) => item.trim().startsWith('token='));
+            setIsLoggedIn(hasToken);
+        };
+        checkLogin();
+
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
@@ -23,15 +33,10 @@ export default function PublicNavbar() {
             }`}
         >
             <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-                {/* Logo 区域 */}
-                <Link href="/public" className="flex items-center gap-2 group">
-                    {/* 图标容器：改大了！w-12 h-12 (48px) */}
+                {/* Logo 区域 (保持你原来的样式不变) */}
+                <Link href="/" className="flex items-center gap-2 group">
                     <div className="relative w-12 h-12 flex items-center justify-center">
-
-                        {/* 呼吸光晕：也跟随变大 */}
                         <div className="absolute inset-0 bg-cyan-500 blur-lg opacity-40 group-hover:opacity-80 transition-opacity animate-pulse-slow rounded-full"></div>
-
-                        {/* 图片 Logo */}
                         <div className="relative w-full h-full z-10">
                             <Image
                                 src="/logo.svg"
@@ -41,11 +46,9 @@ export default function PublicNavbar() {
                             />
                         </div>
                     </div>
-
-                    {/* 文字部分：字号也可以稍微加大一点 text-xl -> text-2xl */}
                     <span className="text-2xl font-bold text-white tracking-wide group-hover:text-cyan-400 transition-colors">
-            知悟引擎
-        </span>
+                        知悟引擎
+                    </span>
                 </Link>
 
                 {/* 桌面端菜单 */}
@@ -59,19 +62,34 @@ export default function PublicNavbar() {
 
                     <div className="h-4 w-px bg-white/10"></div>
 
+                    {/* 按钮区域 (根据登录状态切换) */}
                     <div className="flex gap-4">
-                        <Link
-                            href="/login"
-                            className="px-4 py-2 text-sm font-medium text-white hover:text-cyan-400 transition-colors"
-                        >
-                            登录/进入
-                        </Link>
-                        <Link
-                            href="/register"
-                            className="px-5 py-2 text-sm font-bold text-slate-950 bg-cyan-400 rounded-full hover:bg-cyan-300 transition-all shadow-[0_0_15px_rgba(34,211,238,0.4)] hover:shadow-[0_0_25px_rgba(34,211,238,0.6)]"
-                        >
-                            立即注册
-                        </Link>
+                        {isLoggedIn ? (
+                            // --- 已登录：显示进入按钮 ---
+                            // 链接到 /login，让 Middleware 自动处理跳转到 dashboard/student 或 teacher
+                            <Link
+                                href="/login"
+                                className="px-6 py-2 text-sm font-bold text-slate-950 bg-cyan-400 rounded-full hover:bg-cyan-300 transition-all shadow-[0_0_15px_rgba(34,211,238,0.4)] hover:shadow-[0_0_25px_rgba(34,211,238,0.6)]"
+                            >
+                                进入实验室 &rarr;
+                            </Link>
+                        ) : (
+                            // --- 未登录：显示原有按钮 ---
+                            <>
+                                <Link
+                                    href="/login"
+                                    className="px-4 py-2 text-sm font-medium text-white hover:text-cyan-400 transition-colors"
+                                >
+                                    登录/进入
+                                </Link>
+                                <Link
+                                    href="/register"
+                                    className="px-5 py-2 text-sm font-bold text-slate-950 bg-cyan-400 rounded-full hover:bg-cyan-300 transition-all shadow-[0_0_15px_rgba(34,211,238,0.4)] hover:shadow-[0_0_25px_rgba(34,211,238,0.6)]"
+                                >
+                                    立即注册
+                                </Link>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>

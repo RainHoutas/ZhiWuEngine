@@ -42,7 +42,7 @@ export async function middleware(req: NextRequest) {
     // ================================
     // 3. 已登录用户访问 /login 或 /register -> 自动跳 Dashboard
     // ================================
-    if (pathname === "/login" || pathname === "/register") {
+    if (pathname === "/login") {
         return NextResponse.redirect(new URL(`/dashboard/${userRole}`, req.url));
     }
 
