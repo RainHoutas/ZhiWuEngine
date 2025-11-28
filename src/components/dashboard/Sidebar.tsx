@@ -60,9 +60,21 @@ export default function Sidebar() {
     const menus = isAdmin ? adminMenus : (isTeacher ? teacherMenus : studentMenus);
 
     const handleLogout = async () => {
-        document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
-        router.push('/login');
-        router.refresh();
+        try {
+            // 1. 调用后端接口清除 HttpOnly Cookie (服务端操作)
+            await fetch('/api/auth/logout', { method: 'POST' });
+
+            // 2. 为了以防万一，前端也清一下普通 Cookie (客户端操作)
+            document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+
+            // 3. 跳转
+            router.push('/login');
+            router.refresh();
+        } catch (error) {
+            console.error("Logout failed", error);
+            // 即使失败也要强制跳转
+            router.push('/login');
+        }
     };
 
     return (

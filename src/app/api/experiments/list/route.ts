@@ -1,54 +1,44 @@
-import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { verifyToken } from "@/lib/jwt";
+import { prisma } from "@/lib/prisma";
+import { authGuard } from "@/lib/authGuard";
+// 1. 引入生成的 Enum 类型 (根据你的 schema output 路径)
+// 如果你的 IDE 提示找不到这个路径，请检查 node_modules 或生成的目录
+import { Subject } from "@prisma/client";
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
+    const payload = await authGuard(req);
+    if (payload instanceof NextResponse) return payload;
+
+    const { searchParams } = new URL(req.url);
+    const subjectParam = searchParams.get("subject");
+
     try {
-        const auth = req.headers.get("authorization");
-        if (!auth) {
-            return NextResponse.json({ error: "Missing token" }, { status: 401 });
-        }
+        // 2. 严谨的类型转换
+        // 只有当参数存在，且不为 'all'，且在枚举范围内时，才添加筛选条件
+        const isValidSubject = subjectParam && Object.values(Subject).includes(subjectParam as Subject);
 
-        const token = auth.replace("Bearer ", "");
-        const decoded = verifyToken(token) as { id: number; role: string } | null;
-
-        if (!decoded) {
-            return NextResponse.json({ error: "Invalid token" }, { status: 401 });
-        }
-
-        const url = new URL(req.url);
-        const subject = url.searchParams.get("subject") || undefined;
-        const keyword = url.searchParams.get("keyword") || undefined;
+        const whereCondition = (isValidSubject)
+            ? { subject: subjectParam as Subject }
+            : {};
 
         const experiments = await prisma.experiment.findMany({
-            where: {
-                AND: [
-                    subject ? { subject: subject as any } : {},
-                    keyword
-                        ? {
-                            name: { contains: keyword },
-                        }
-                        : {},
-                ],
-            },
-            orderBy: { createdAt: "desc" },
+            where: whereCondition,
+            orderBy: { createdAt: 'desc' },
             select: {
                 id: true,
                 name: true,
-                subject: true,
                 description: true,
-                version: true,
-                sceneAssetPath: true,
-                createdAt: true,
-            },
+                subject: true,
+                coverImage: true,
+                sceneAssetPath: true
+            }
         });
 
-        return NextResponse.json({ experiments }, { status: 200 });
-    } catch (err) {
-        console.error(err);
-        return NextResponse.json(
-            { error: "Failed to fetch experiments" },
-            { status: 500 }
-        );
+        return NextResponse.json(experiments);
+    } catch (e) {
+        console.error("获取实验列表失败:", e);
+        return NextResponse.json({ message: "获取失败" }, { status: 500 });
     }
 }

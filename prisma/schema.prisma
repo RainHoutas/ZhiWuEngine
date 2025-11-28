@@ -5,8 +5,6 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
-  // 注意：保留你自定义的生成路径
-  output   = "../src/lib/generated/prisma"
 }
 
 // --- 1. 用户模型 ---
@@ -62,6 +60,7 @@ model Experiment {
   sceneAssetPath String // Unity 资源路径
   version        String?
   createdAt      DateTime @default(now())
+  coverImage     String?
 
   // 关系
   logs   ExperimentLog[]
